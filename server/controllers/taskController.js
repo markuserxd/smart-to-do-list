@@ -65,3 +65,46 @@ exports.getTaskById = asyncHandler(async (req,res)=>{
     );
 
 });
+
+exports.updateTask = asyncHandler(async (req,res)=>{
+
+    const id = Number(req.params.id);
+
+    const task = taskModel.getTaskById(id);
+
+    if (!task) {
+        return response.error(
+            res,
+            "Task not found",
+            404
+        );
+    }
+
+    const { title, priority } = req.body;
+
+    if (!title || title.trim() === "") {
+        return response.error(
+            res,
+            "Title is required",
+            400
+        );
+    }
+
+    const priorities = ["Low", "Medium", "High"];
+
+    if (priority && !priorities.includes(priority)) {
+        return response.error(
+            res,
+            "Invalid priority",
+            400
+        );
+    }
+
+    const updatedTask = taskModel.updateTask(id, req.body);
+
+    return response.success(
+        res,
+        updatedTask,
+        "Task updated successfully"
+    );
+});

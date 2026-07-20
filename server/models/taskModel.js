@@ -36,8 +36,36 @@ function getTaskById(id) {
 
 }
 
+function updateTask(id, task) {
+    const stmt = db.prepare(`
+        UPDATE tasks
+        SET
+            title = ?,
+            description = ?,
+            priority = ?,
+            deadline = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+    `);
+
+    const result = stmt.run(
+        task.title,
+        task.description,
+        task.priority,
+        task.deadline,
+        id
+    );
+
+    if (result.changes === 0) {
+        return null;
+    }
+
+    return getTaskById(id);
+}
+
 module.exports = {
     getAllTasks,
     createTask,
-    getTaskById
+    getTaskById,
+    updateTask
 };

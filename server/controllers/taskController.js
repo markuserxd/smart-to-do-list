@@ -1,7 +1,7 @@
+const taskModel = require("../models/taskModel");
+
 exports.getAllTasks = (req, res) => {
+    const tasks = taskModel.getAllTasks();
 
-    res.json({
-        message: "Get all tasks"
-    });
-
+    res.json(tasks);
 };

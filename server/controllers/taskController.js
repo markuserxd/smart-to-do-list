@@ -1,29 +1,29 @@
 const taskModel = require("../models/taskModel");
 const response = require("../utils/response");
+const asyncHandler = require("../utils/asyncHandler");
 
-exports.getAllTasks = (req, res) => {
+exports.getAllTasks = asyncHandler(async (req,res)=>{
     const tasks = taskModel.getAllTasks();
 
-    return response.success(
-        res,
-        tasks,
-        "Tasks retrieved successfully"
-    );
-};
+        return response.success(
+            res,
+            tasks,
+            "Tasks retrieved successfully"
+        );
+});
 
-exports.createTask = (req, res) => {
-
+exports.createTask = asyncHandler(async (req,res)=>{
     const { title, priority } = req.body;
 
     if (!title) {
 
-    return response.error(
-        res,
-        "Title is required",
-        400
-    );
+        return response.error(
+            res,
+            "Title is required",
+            400
+        );
 
-}
+    }
 
     const priorities = ["Low", "Medium", "High"];
 
@@ -41,9 +41,9 @@ exports.createTask = (req, res) => {
         "Task created successfully",
         201
     );
-};
+});
 
-exports.getTaskById = (req, res) => {
+exports.getTaskById = asyncHandler(async (req,res)=>{
 
     const id = Number(req.params.id);
 
@@ -52,11 +52,16 @@ exports.getTaskById = (req, res) => {
     if (!task) {
 
         return res.status(404).json({
+            success: false,
             message: "Task not found"
         });
 
     }
 
-    res.json(task);
+    return response.success(
+        res,
+        task,
+        "Task retrieved successfully"
+    );
 
-};
+});

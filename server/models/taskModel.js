@@ -26,9 +26,13 @@ function createTask(task) {
 
 function getTaskById(id) {
 
-    return db.prepare(
-        "SELECT * FROM tasks WHERE id = ?"
-    ).get(id);
+    const stmt = db.prepare(`
+        SELECT *
+        FROM tasks
+        WHERE id = ?
+    `);
+
+    return stmt.get(id);
 
 }
 

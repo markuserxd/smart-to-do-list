@@ -3,3 +3,4 @@ node_modules/
 database/*.db
 .DS_Store
 Thumbs.db
+database/test.db

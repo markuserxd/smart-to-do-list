@@ -5,19 +5,17 @@ function getAllTasks(filters = {}) {
         search,
         status,
         priority,
-        sort
+        sort,
+        page = 1,
+        limit = 10
     } = filters;
 
-    let query = `
-        SELECT *
-        FROM tasks
-        WHERE 1 = 1
-    `;
+    let whereClause = "WHERE 1 = 1";
 
     const params = [];
 
     if (search) {
-        query += `
+        whereClause += `
             AND (
                 title LIKE ?
                 OR description LIKE ?
@@ -30,25 +28,27 @@ function getAllTasks(filters = {}) {
     }
 
     if (status === "completed") {
-        query += " AND completed = 1";
+        whereClause += " AND completed = 1";
     }
 
     if (status === "pending") {
-        query += " AND completed = 0";
+        whereClause += " AND completed = 0";
     }
 
     if (priority) {
-        query += " AND priority = ?";
+        whereClause += " AND priority = ?";
         params.push(priority);
     }
 
+    let orderClause;
+
     switch (sort) {
         case "oldest":
-            query += " ORDER BY created_at ASC";
+            orderClause = "ORDER BY created_at ASC";
             break;
 
         case "deadline":
-            query += `
+            orderClause = `
                 ORDER BY
                     deadline IS NULL,
                     deadline ASC
@@ -56,7 +56,7 @@ function getAllTasks(filters = {}) {
             break;
 
         case "priority":
-            query += `
+            orderClause = `
                 ORDER BY CASE priority
                     WHEN 'High' THEN 1
                     WHEN 'Medium' THEN 2
@@ -68,11 +68,47 @@ function getAllTasks(filters = {}) {
 
         case "newest":
         default:
-            query += " ORDER BY created_at DESC";
+            orderClause = "ORDER BY created_at DESC";
             break;
     }
 
-    return db.prepare(query).all(...params);
+    const offset = (page - 1) * limit;
+
+    const tasksQuery = `
+        SELECT *
+        FROM tasks
+        ${whereClause}
+        ${orderClause}
+        LIMIT ?
+        OFFSET ?
+    `;
+
+    const tasks = db
+        .prepare(tasksQuery)
+        .all(...params, limit, offset);
+
+    const countQuery = `
+        SELECT COUNT(*) AS total
+        FROM tasks
+        ${whereClause}
+    `;
+
+    const countResult = db
+        .prepare(countQuery)
+        .get(...params);
+
+    const totalItems = countResult.total;
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return {
+        tasks,
+        pagination: {
+            page,
+            limit,
+            totalItems,
+            totalPages
+        }
+    };
 }
 
 function createTask(task) {

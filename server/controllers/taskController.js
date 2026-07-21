@@ -7,14 +7,16 @@ exports.getAllTasks = asyncHandler(async (req,res)=>{
         search: req.query.search?.trim(),
         status: req.query.status,
         priority: req.query.priority,
-        sort: req.query.sort
+        sort: req.query.sort,
+        page: Number(req.query.page) || 1,
+        limit: Number(req.query.limit) || 10
     };
 
-    const tasks = taskModel.getAllTasks(filters);
+    const result = taskModel.getAllTasks(filters);
 
     return response.success(
         res,
-        tasks,
+        result,
         "Tasks retrieved successfully"
     );
 });

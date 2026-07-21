@@ -6,7 +6,11 @@ const validateTask = require("../middleware/validateTask");
 const validateTaskId = require("../middleware/validateTaskId");
 const validateTaskQuery = require("../middleware/validateTaskQuery");
 
-router.get("/", validateTaskQuery, taskController.getAllTasks);
+router.get(
+    "/",
+    validateTaskQuery,
+    taskController.getAllTasks
+);
 router.get("/:id", validateTaskId, taskController.getTaskById);
 router.post("/", validateTask, taskController.createTask);
 router.put("/:id", validateTaskId, validateTask, taskController.updateTask);

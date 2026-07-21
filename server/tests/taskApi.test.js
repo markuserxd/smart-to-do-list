@@ -356,4 +356,447 @@ describe("Smart To-Do API", () => {
             });
         });
     });
+
+    describe("Task search", () => {
+        test("should search tasks by title", async () => {
+            await createTask({
+                title: "Learn Node.js",
+                description: "Backend development"
+            });
+
+            await createTask({
+                title: "Buy groceries",
+                description: "Milk and bread"
+            });
+
+            const response = await request(app)
+                .get("/api/tasks?search=node")
+                .expect(200);
+
+            expect(response.body.data.tasks).toHaveLength(1);
+            expect(response.body.data.tasks[0].title).toBe(
+                "Learn Node.js"
+            );
+
+            expect(
+                response.body.data.pagination.totalItems
+            ).toBe(1);
+        });
+
+        test("should search tasks by description", async () => {
+            await createTask({
+                title: "Study",
+                description: "Practice Express API"
+            });
+
+            await createTask({
+                title: "Exercise",
+                description: "Run for thirty minutes"
+            });
+
+            const response = await request(app)
+                .get("/api/tasks?search=express")
+                .expect(200);
+
+            expect(response.body.data.tasks).toHaveLength(1);
+            expect(response.body.data.tasks[0].title).toBe(
+                "Study"
+            );
+        });
+
+        test("should return an empty list when no task matches", async () => {
+            await createTask({
+                title: "Existing task"
+            });
+
+            const response = await request(app)
+                .get("/api/tasks?search=nonexistent")
+                .expect(200);
+
+            expect(response.body.data.tasks).toEqual([]);
+            expect(
+                response.body.data.pagination.totalItems
+            ).toBe(0);
+        });
+    });
+
+    describe("Task status filter", () => {
+        test("should return only pending tasks", async () => {
+            const firstTask = await createTask({
+                title: "Pending task"
+            });
+
+            const secondTask = await createTask({
+                title: "Completed task"
+            });
+
+            await request(app)
+                .patch(`/api/tasks/${secondTask.id}/complete`)
+                .expect(200);
+
+            const response = await request(app)
+                .get("/api/tasks?status=pending")
+                .expect(200);
+
+            expect(response.body.data.tasks).toHaveLength(1);
+            expect(response.body.data.tasks[0]).toEqual(
+                expect.objectContaining({
+                    id: firstTask.id,
+                    title: "Pending task",
+                    completed: 0
+                })
+            );
+        });
+
+        test("should return only completed tasks", async () => {
+            const pendingTask = await createTask({
+                title: "Pending task"
+            });
+
+            const completedTask = await createTask({
+                title: "Completed task"
+            });
+
+            await request(app)
+                .patch(`/api/tasks/${completedTask.id}/complete`)
+                .expect(200);
+
+            const response = await request(app)
+                .get("/api/tasks?status=completed")
+                .expect(200);
+
+            expect(response.body.data.tasks).toHaveLength(1);
+            expect(response.body.data.tasks[0]).toEqual(
+                expect.objectContaining({
+                    id: completedTask.id,
+                    title: "Completed task",
+                    completed: 1
+                })
+            );
+
+            expect(response.body.data.tasks[0].id).not.toBe(
+                pendingTask.id
+            );
+        });
+
+        test("should reject an invalid status", async () => {
+            const response = await request(app)
+                .get("/api/tasks?status=done")
+                .expect(400);
+
+            expect(response.body).toEqual({
+                success: false,
+                message: "Status must be completed or pending"
+            });
+        });
+    });
+
+    describe("Task priority filter", () => {
+        test("should return only high-priority tasks", async () => {
+            await createTask({
+                title: "Low task",
+                priority: "Low"
+            });
+
+            await createTask({
+                title: "High task",
+                priority: "High"
+            });
+
+            await createTask({
+                title: "Medium task",
+                priority: "Medium"
+            });
+
+            const response = await request(app)
+                .get("/api/tasks?priority=High")
+                .expect(200);
+
+            expect(response.body.data.tasks).toHaveLength(1);
+
+            expect(response.body.data.tasks[0]).toEqual(
+                expect.objectContaining({
+                    title: "High task",
+                    priority: "High"
+                })
+            );
+        });
+
+        test("should reject an invalid priority filter", async () => {
+            const response = await request(app)
+                .get("/api/tasks?priority=Urgent")
+                .expect(400);
+
+            expect(response.body).toEqual({
+                success: false,
+                message: "Priority must be Low, Medium, or High"
+            });
+        });
+    });
+
+    describe("Task sorting", () => {
+        test("should sort tasks by priority", async () => {
+            await createTask({
+                title: "Low task",
+                priority: "Low"
+            });
+
+            await createTask({
+                title: "High task",
+                priority: "High"
+            });
+
+            await createTask({
+                title: "Medium task",
+                priority: "Medium"
+            });
+
+            const response = await request(app)
+                .get("/api/tasks?sort=priority")
+                .expect(200);
+
+            const priorities = response.body.data.tasks.map(
+                (task) => task.priority
+            );
+
+            expect(priorities).toEqual([
+                "High",
+                "Medium",
+                "Low"
+            ]);
+        });
+
+        test("should sort tasks by deadline", async () => {
+            await createTask({
+                title: "Later deadline",
+                deadline: "2026-12-20"
+            });
+
+            await createTask({
+                title: "Earlier deadline",
+                deadline: "2026-08-01"
+            });
+
+            await createTask({
+                title: "No deadline",
+                deadline: null
+            });
+
+            const response = await request(app)
+                .get("/api/tasks?sort=deadline")
+                .expect(200);
+
+            const titles = response.body.data.tasks.map(
+                (task) => task.title
+            );
+
+            expect(titles).toEqual([
+                "Earlier deadline",
+                "Later deadline",
+                "No deadline"
+            ]);
+        });
+
+        test("should reject an invalid sort value", async () => {
+            const response = await request(app)
+                .get("/api/tasks?sort=random")
+                .expect(400);
+
+            expect(response.body).toEqual({
+                success: false,
+                message:
+                    "Sort must be newest, oldest, deadline, or priority"
+            });
+        });
+    });
+
+    describe("Task pagination", () => {
+        test("should return the requested page and limit", async () => {
+            for (let index = 1; index <= 12; index += 1) {
+                await createTask({
+                    title: `Task ${index}`
+                });
+            }
+
+            const response = await request(app)
+                .get("/api/tasks?page=2&limit=5")
+                .expect(200);
+
+            expect(response.body.data.tasks).toHaveLength(5);
+
+            expect(response.body.data.pagination).toEqual({
+                page: 2,
+                limit: 5,
+                totalItems: 12,
+                totalPages: 3
+            });
+        });
+
+        test("should return remaining tasks on the last page", async () => {
+            for (let index = 1; index <= 12; index += 1) {
+                await createTask({
+                    title: `Task ${index}`
+                });
+            }
+
+            const response = await request(app)
+                .get("/api/tasks?page=3&limit=5")
+                .expect(200);
+
+            expect(response.body.data.tasks).toHaveLength(2);
+
+            expect(response.body.data.pagination).toEqual({
+                page: 3,
+                limit: 5,
+                totalItems: 12,
+                totalPages: 3
+            });
+        });
+
+        test("should return an empty list for a page beyond the last page", async () => {
+            await createTask({
+                title: "Only task"
+            });
+
+            const response = await request(app)
+                .get("/api/tasks?page=10&limit=5")
+                .expect(200);
+
+            expect(response.body.data.tasks).toEqual([]);
+
+            expect(response.body.data.pagination).toEqual({
+                page: 10,
+                limit: 5,
+                totalItems: 1,
+                totalPages: 1
+            });
+        });
+    });
+
+    describe("Pagination validation", () => {
+        test("should reject page zero", async () => {
+            const response = await request(app)
+                .get("/api/tasks?page=0")
+                .expect(400);
+
+            expect(response.body).toEqual({
+                success: false,
+                message: "Page must be a positive integer"
+            });
+        });
+
+        test("should reject a non-numeric page", async () => {
+            const response = await request(app)
+                .get("/api/tasks?page=abc")
+                .expect(400);
+
+            expect(response.body).toEqual({
+                success: false,
+                message: "Page must be a positive integer"
+            });
+        });
+
+        test("should reject limit zero", async () => {
+            const response = await request(app)
+                .get("/api/tasks?limit=0")
+                .expect(400);
+
+            expect(response.body).toEqual({
+                success: false,
+                message:
+                    "Limit must be an integer between 1 and 100"
+            });
+        });
+
+        test("should reject a limit greater than 100", async () => {
+            const response = await request(app)
+                .get("/api/tasks?limit=101")
+                .expect(400);
+
+            expect(response.body).toEqual({
+                success: false,
+                message:
+                    "Limit must be an integer between 1 and 100"
+            });
+        });
+
+        test("should reject a decimal limit", async () => {
+            const response = await request(app)
+                .get("/api/tasks?limit=5.5")
+                .expect(400);
+
+            expect(response.body).toEqual({
+                success: false,
+                message:
+                    "Limit must be an integer between 1 and 100"
+            });
+        });
+    });
+
+    describe("Combined task queries", () => {
+        test("should combine search, status, priority, sort, and pagination", async () => {
+            const matchingTaskOne = await createTask({
+                title: "Learn API testing",
+                description: "Practice backend tests",
+                priority: "High",
+                deadline: "2026-08-10"
+            });
+
+            const matchingTaskTwo = await createTask({
+                title: "Build API project",
+                description: "Portfolio backend",
+                priority: "High",
+                deadline: "2026-08-05"
+            });
+
+            const completedTask = await createTask({
+                title: "Completed API task",
+                priority: "High",
+                deadline: "2026-08-01"
+            });
+
+            await request(app)
+                .patch(`/api/tasks/${completedTask.id}/complete`)
+                .expect(200);
+
+            await createTask({
+                title: "Low-priority API task",
+                priority: "Low",
+                deadline: "2026-08-02"
+            });
+
+            await createTask({
+                title: "Unrelated task",
+                priority: "High"
+            });
+
+            const response = await request(app)
+                .get(
+                    "/api/tasks" +
+                    "?search=api" +
+                    "&status=pending" +
+                    "&priority=High" +
+                    "&sort=deadline" +
+                    "&page=1" +
+                    "&limit=5"
+                )
+                .expect(200);
+
+            expect(response.body.data.tasks).toHaveLength(2);
+
+            expect(
+                response.body.data.tasks.map((task) => task.id)
+            ).toEqual([
+                matchingTaskTwo.id,
+                matchingTaskOne.id
+            ]);
+
+            expect(response.body.data.pagination).toEqual({
+                page: 1,
+                limit: 5,
+                totalItems: 2,
+                totalPages: 1
+            });
+        });
+    });
 });

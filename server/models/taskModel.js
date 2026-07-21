@@ -44,7 +44,7 @@ function getAllTasks(filters = {}) {
 
     switch (sort) {
         case "oldest":
-            orderClause = "ORDER BY created_at ASC";
+            orderClause = "ORDER BY created_at ASC, id ASC";
             break;
 
         case "deadline":
@@ -68,7 +68,7 @@ function getAllTasks(filters = {}) {
 
         case "newest":
         default:
-            orderClause = "ORDER BY created_at DESC";
+            orderClause = "ORDER BY created_at DESC, id DESC";
             break;
     }
 

@@ -3,13 +3,20 @@ const response = require("../utils/response");
 const asyncHandler = require("../utils/asyncHandler");
 
 exports.getAllTasks = asyncHandler(async (req,res)=>{
-    const tasks = taskModel.getAllTasks();
+    const filters = {
+        search: req.query.search?.trim(),
+        status: req.query.status,
+        priority: req.query.priority,
+        sort: req.query.sort
+    };
 
-        return response.success(
-            res,
-            tasks,
-            "Tasks retrieved successfully"
-        );
+    const tasks = taskModel.getAllTasks(filters);
+
+    return response.success(
+        res,
+        tasks,
+        "Tasks retrieved successfully"
+    );
 });
 
 exports.createTask = asyncHandler(async (req,res)=>{

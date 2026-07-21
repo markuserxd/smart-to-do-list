@@ -1,8 +1,78 @@
 const db = require("../database/database");
 
-function getAllTasks() {
-    const stmt = db.prepare("SELECT * FROM tasks");
-    return stmt.all();
+function getAllTasks(filters = {}) {
+    const {
+        search,
+        status,
+        priority,
+        sort
+    } = filters;
+
+    let query = `
+        SELECT *
+        FROM tasks
+        WHERE 1 = 1
+    `;
+
+    const params = [];
+
+    if (search) {
+        query += `
+            AND (
+                title LIKE ?
+                OR description LIKE ?
+            )
+        `;
+
+        const searchTerm = `%${search}%`;
+
+        params.push(searchTerm, searchTerm);
+    }
+
+    if (status === "completed") {
+        query += " AND completed = 1";
+    }
+
+    if (status === "pending") {
+        query += " AND completed = 0";
+    }
+
+    if (priority) {
+        query += " AND priority = ?";
+        params.push(priority);
+    }
+
+    switch (sort) {
+        case "oldest":
+            query += " ORDER BY created_at ASC";
+            break;
+
+        case "deadline":
+            query += `
+                ORDER BY
+                    deadline IS NULL,
+                    deadline ASC
+            `;
+            break;
+
+        case "priority":
+            query += `
+                ORDER BY CASE priority
+                    WHEN 'High' THEN 1
+                    WHEN 'Medium' THEN 2
+                    WHEN 'Low' THEN 3
+                    ELSE 4
+                END
+            `;
+            break;
+
+        case "newest":
+        default:
+            query += " ORDER BY created_at DESC";
+            break;
+    }
+
+    return db.prepare(query).all(...params);
 }
 
 function createTask(task) {

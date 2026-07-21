@@ -79,10 +79,22 @@ function toggleTaskComplete(id, currentCompleted) {
     return getTaskById(id);
 }
 
+function deleteTask(id) {
+    const stmt = db.prepare(`
+        DELETE FROM tasks
+        WHERE id = ?
+    `);
+
+    const result = stmt.run(id);
+
+    return result.changes > 0;
+}
+
 module.exports = {
     getAllTasks,
     createTask,
     getTaskById,
     updateTask,
-    toggleTaskComplete
+    toggleTaskComplete,
+    deleteTask
 };

@@ -126,3 +126,13 @@ exports.toggleTaskComplete = asyncHandler(async (req,res)=>{
         message
     );
 });
+
+exports.deleteTask = asyncHandler(async (req,res)=>{
+    taskModel.deleteTask(req.taskId);
+
+    return response.success(
+        res,
+        null,
+        "Task deleted successfully"
+    );
+});

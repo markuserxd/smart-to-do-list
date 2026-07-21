@@ -60,7 +60,7 @@ exports.getTaskById = asyncHandler(async (req,res)=>{
 
     return response.success(
         res,
-        task,
+        req.task,
         "Task retrieved successfully"
     );
 
@@ -100,7 +100,7 @@ exports.updateTask = asyncHandler(async (req,res)=>{
         );
     }
 
-    const updatedTask = taskModel.updateTask(id, req.body);
+    const updatedTask = taskModel.updateTask(req.taskId, req.body);
 
     return response.success(
         res,

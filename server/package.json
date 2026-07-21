@@ -1,11 +1,12 @@
 {
-  "name": "server",
+  "name": "smart-to-do-server",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "init-db": "node database/init.js"
   },
   "keywords": [],
   "author": "",

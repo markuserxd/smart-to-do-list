@@ -63,9 +63,26 @@ function updateTask(id, task) {
     return getTaskById(id);
 }
 
+function toggleTaskComplete(id, currentCompleted) {
+    const newCompleted = currentCompleted === 1 ? 0 : 1;
+
+    const stmt = db.prepare(`
+        UPDATE tasks
+        SET
+            completed = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+    `);
+
+    stmt.run(newCompleted, id);
+
+    return getTaskById(id);
+}
+
 module.exports = {
     getAllTasks,
     createTask,
     getTaskById,
-    updateTask
+    updateTask,
+    toggleTaskComplete
 };

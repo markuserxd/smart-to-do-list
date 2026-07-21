@@ -108,3 +108,21 @@ exports.updateTask = asyncHandler(async (req,res)=>{
         "Task updated successfully"
     );
 });
+
+exports.toggleTaskComplete = asyncHandler(async (req,res)=>{
+    const updatedTask = taskModel.toggleTaskComplete(
+        req.taskId,
+        req.task.completed
+    );
+
+    const message =
+        updatedTask.completed === 1
+            ? "Task marked as completed"
+            : "Task marked as pending";
+
+    return response.success(
+        res,
+        updatedTask,
+        message
+    );
+});

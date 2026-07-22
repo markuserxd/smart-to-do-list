@@ -54,3 +54,22 @@ export async function createTask(taskData) {
 
     return body.data;
 }
+
+export async function toggleTaskComplete(taskId) {
+    const response = await fetch(
+        `${API_BASE_URL}/tasks/${taskId}/complete`,
+        {
+            method: "PATCH"
+        }
+    );
+
+    const body = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            body.message || "Unable to update task status"
+        );
+    }
+
+    return body.data;
+}

@@ -1,6 +1,7 @@
 const taskList = document.querySelector("#task-list");
 const statusMessage = document.querySelector("#status-message");
 const taskCount = document.querySelector("#task-count");
+const toast = document.querySelector("#toast");
 
 function formatDeadline(deadline) {
     if (!deadline) {
@@ -33,6 +34,8 @@ function createTaskCard(task) {
     checkbox.className = "task-checkbox";
     checkbox.type = "checkbox";
     checkbox.checked = Boolean(task.completed);
+    checkbox.dataset.action = "toggle-complete";
+    checkbox.dataset.taskId = String(task.id);
     checkbox.setAttribute(
         "aria-label",
         `Mark ${task.title} as complete`
@@ -127,4 +130,22 @@ export function renderTasks(tasks, totalItems = tasks.length) {
     });
 
     taskList.append(fragment);
+}
+
+let toastTimeoutId;
+
+export function showToast(
+    message,
+    type = "success",
+    duration = 3000
+) {
+    clearTimeout(toastTimeoutId);
+
+    toast.textContent = message;
+    toast.className = `toast ${type}`;
+    toast.hidden = false;
+
+    toastTimeoutId = setTimeout(() => {
+        toast.hidden = true;
+    }, duration);
 }

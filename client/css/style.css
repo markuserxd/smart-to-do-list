@@ -483,3 +483,29 @@ select:focus {
         }
     }
 }
+
+.toast {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 1200;
+    max-width: min(380px, calc(100% - 40px));
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #172033;
+    color: #ffffff;
+    box-shadow: var(--shadow);
+    font-weight: 700;
+}
+
+.toast.error {
+    background: var(--danger);
+}
+
+.toast.success {
+    background: var(--success);
+}
+
+.toast[hidden] {
+    display: none;
+}

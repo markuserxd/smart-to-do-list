@@ -1,11 +1,5 @@
-import { createTask, fetchTasks } from "./api.js";
-
-
-import {
-    renderTasks,
-    showError,
-    showLoading
-} from "./ui.js";
+import { createTask, fetchTasks, toggleTaskComplete } from "./api.js";
+import { renderTasks, showError, showLoading, showToast } from "./ui.js";
 
 const searchInput = document.querySelector("#search-input");
 const statusFilter = document.querySelector("#status-filter");
@@ -46,8 +40,10 @@ function buildQueryString() {
     return params.toString();
 }
 
-async function loadTasks() {
-    showLoading();
+async function loadTasks({ showLoadingState = true } = {}) {
+    if (showLoadingState) {
+        showLoading();
+    }
 
     try {
         const result = await fetchTasks(buildQueryString());
@@ -63,11 +59,20 @@ async function loadTasks() {
 
         console.error(error);
 
-        showError(
-            error.message === "Failed to fetch"
-                ? "Unable to connect to the server."
-                : error.message
-        );
+        if (showLoadingState) {
+            showError(
+                error.message === "Failed to fetch"
+                    ? "Unable to connect to the server."
+                    : error.message
+            );
+        } else {
+            showToast(
+                error.message === "Failed to fetch"
+                    ? "Unable to connect to the server."
+                    : error.message,
+                "error"
+            );
+        }
     }
 }
 
@@ -105,6 +110,51 @@ async function handleTaskSubmit(event) {
     } finally {
         submitTaskButton.disabled = false;
         submitTaskButton.textContent = "Add Task";
+    }
+}
+
+async function handleTaskListChange(event) {
+    const checkbox = event.target.closest(
+        '[data-action="toggle-complete"]'
+    );
+
+    if (!checkbox) {
+        return;
+    }
+
+    const taskId = Number(checkbox.dataset.taskId);
+
+    if (!Number.isInteger(taskId)) {
+        return;
+    }
+
+    const previousCheckedState = !checkbox.checked;
+
+    checkbox.disabled = true;
+
+    try {
+        const updatedTask = await toggleTaskComplete(taskId);
+
+        showToast(
+            updatedTask.completed
+                ? "Task marked as completed"
+                : "Task marked as pending"
+        );
+
+        await loadTasks();
+    } catch (error) {
+        console.error(error);
+
+        checkbox.checked = previousCheckedState;
+
+        showToast(
+            error.message === "Failed to fetch"
+                ? "Unable to connect to the server."
+                : error.message,
+            "error"
+        );
+    } finally {
+        checkbox.disabled = false;
     }
 }
 
@@ -260,6 +310,8 @@ const submitTaskButton = document.querySelector(
     "#submit-task-button"
 );
 
+const taskList = document.querySelector("#task-list");
+
 statusFilter.addEventListener("change", handleFilterChange);
 priorityFilter.addEventListener("change", handleFilterChange);
 sortSelect.addEventListener("change", handleFilterChange);
@@ -268,6 +320,7 @@ resetFiltersButton.addEventListener("click", resetFilters);
 addTaskButton.addEventListener("click", openTaskModal);
 closeModalButton.addEventListener("click", closeTaskModal);
 cancelTaskButton.addEventListener("click", closeTaskModal);
+taskList.addEventListener("change", handleTaskListChange);
 
 taskModal.addEventListener("click", (event) => {
     if (event.target.matches("[data-modal-close]")) {

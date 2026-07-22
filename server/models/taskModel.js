@@ -51,7 +51,8 @@ function getAllTasks(filters = {}) {
             orderClause = `
                 ORDER BY
                     deadline IS NULL,
-                    deadline ASC
+                    deadline ASC,
+                    id ASC
             `;
             break;
 
@@ -62,7 +63,8 @@ function getAllTasks(filters = {}) {
                     WHEN 'Medium' THEN 2
                     WHEN 'Low' THEN 3
                     ELSE 4
-                END
+                END,
+                id ASC
             `;
             break;
 

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Smart To-Do List application"
+    >
+
+    <title>Smart To-Do List</title>
+
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body>
+    <header class="app-header">
+        <div class="container header-content">
+            <div>
+                <p class="eyebrow">Productivity Dashboard</p>
+                <h1>Smart To-Do List</h1>
+                <p class="subtitle">
+                    Organize your tasks and stay focused.
+                </p>
+            </div>
+
+            <button
+                id="add-task-button"
+                class="primary-button"
+                type="button"
+            >
+                + Add Task
+            </button>
+        </div>
+    </header>
+
+    <main class="container">
+        <section
+            class="task-controls"
+            aria-label="Task controls"
+        >
+            <div class="search-group">
+                <label for="search-input">Search tasks</label>
+
+                <input
+                    id="search-input"
+                    type="search"
+                    placeholder="Search by title or description"
+                >
+            </div>
+
+            <div class="filter-group">
+                <label for="status-filter">Status</label>
+
+                <select id="status-filter">
+                    <option value="">All statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="completed">Completed</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="priority-filter">Priority</label>
+
+                <select id="priority-filter">
+                    <option value="">All priorities</option>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="sort-select">Sort</label>
+
+                <select id="sort-select">
+                    <option value="newest">Newest</option>
+                    <option value="oldest">Oldest</option>
+                    <option value="deadline">Deadline</option>
+                    <option value="priority">Priority</option>
+                </select>
+            </div>
+        </section>
+
+        <section
+            class="task-section"
+            aria-labelledby="task-section-title"
+        >
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Your workload</p>
+                    <h2 id="task-section-title">Tasks</h2>
+                </div>
+
+                <p id="task-count" class="task-count">
+                    0 tasks
+                </p>
+            </div>
+
+            <div
+                id="status-message"
+                class="status-message"
+                role="status"
+            >
+                Loading tasks...
+            </div>
+
+            <div
+                id="task-list"
+                class="task-list"
+                aria-live="polite"
+            ></div>
+        </section>
+    </main>
+
+    <script
+        src="./js/api.js"
+        type="module"
+    ></script>
+
+    <script
+        src="./js/ui.js"
+        type="module"
+    ></script>
+
+    <script
+        src="./js/app.js"
+        type="module"
+    ></script>
+</body>
+</html>

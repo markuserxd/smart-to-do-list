@@ -31,3 +31,26 @@ export async function fetchTasks(queryString = "") {
         activeController = null;
     }
 }
+
+export async function createTask(taskData) {
+    const response = await fetch(
+        `${API_BASE_URL}/tasks`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(taskData)
+        }
+    );
+
+    const body = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            body.message || "Unable to create task"
+        );
+    }
+
+    return body.data;
+}

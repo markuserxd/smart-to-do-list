@@ -1,4 +1,5 @@
-import { fetchTasks } from "./api.js";
+import { createTask, fetchTasks } from "./api.js";
+
 
 import {
     renderTasks,
@@ -70,6 +71,43 @@ async function loadTasks() {
     }
 }
 
+async function handleTaskSubmit(event) {
+    event.preventDefault();
+
+    if (!validateTaskForm()) {
+        return;
+    }
+
+    submitTaskButton.disabled = true;
+    submitTaskButton.textContent = "Adding...";
+
+    formError.hidden = true;
+    formError.textContent = "";
+
+    try {
+        const taskData = getTaskFormData();
+
+        await createTask(taskData);
+
+        closeTaskModal();
+
+        taskQuery.page = 1;
+        await loadTasks();
+    } catch (error) {
+        console.error(error);
+
+        formError.hidden = false;
+
+        formError.textContent =
+            error.message === "Failed to fetch"
+                ? "Unable to connect to the server."
+                : error.message;
+    } finally {
+        submitTaskButton.disabled = false;
+        submitTaskButton.textContent = "Add Task";
+    }
+}
+
 function debounce(callback, delay = 400) {
     let timeoutId;
 
@@ -106,6 +144,77 @@ function resetFilters() {
     loadTasks();
 }
 
+function resetTaskForm() {
+    taskForm.reset();
+
+    taskPriorityInput.value = "Medium";
+    titleError.textContent = "";
+
+    formError.hidden = true;
+    formError.textContent = "";
+
+    taskTitleInput.removeAttribute("aria-invalid");
+}
+
+function openTaskModal() {
+    resetTaskForm();
+
+    taskModal.hidden = false;
+    document.body.classList.add("modal-open");
+
+    requestAnimationFrame(() => {
+        taskTitleInput.focus();
+    });
+}
+
+function closeTaskModal() {
+    taskModal.hidden = true;
+    document.body.classList.remove("modal-open");
+
+    resetTaskForm();
+    addTaskButton.focus();
+}
+
+function validateTaskForm() {
+    const title = taskTitleInput.value.trim();
+
+    titleError.textContent = "";
+    taskTitleInput.removeAttribute("aria-invalid");
+
+    if (!title) {
+        titleError.textContent = "Title is required.";
+        taskTitleInput.setAttribute("aria-invalid", "true");
+        taskTitleInput.focus();
+
+        return false;
+    }
+
+    if (title.length > 100) {
+        titleError.textContent =
+            "Title must not exceed 100 characters.";
+
+        taskTitleInput.setAttribute("aria-invalid", "true");
+        taskTitleInput.focus();
+
+        return false;
+    }
+
+    return true;
+}
+
+function getTaskFormData() {
+    return {
+        title: taskTitleInput.value.trim(),
+
+        description:
+            taskDescriptionInput.value.trim() || null,
+
+        priority: taskPriorityInput.value,
+
+        deadline: taskDeadlineInput.value || null
+    };
+}
+
 const handleSearch = debounce(() => {
     taskQuery.search = searchInput.value.trim();
     taskQuery.page = 1;
@@ -117,10 +226,64 @@ const resetFiltersButton = document.querySelector(
     "#reset-filters-button"
 );
 
+const addTaskButton = document.querySelector(
+    "#add-task-button"
+);
+
+const taskModal = document.querySelector("#task-modal");
+const closeModalButton = document.querySelector(
+    "#close-modal-button"
+);
+
+const cancelTaskButton = document.querySelector(
+    "#cancel-task-button"
+);
+
+const taskForm = document.querySelector("#task-form");
+const taskTitleInput = document.querySelector("#task-title");
+const taskDescriptionInput = document.querySelector(
+    "#task-description"
+);
+
+const taskPriorityInput = document.querySelector(
+    "#task-priority"
+);
+
+const taskDeadlineInput = document.querySelector(
+    "#task-deadline"
+);
+
+const titleError = document.querySelector("#title-error");
+const formError = document.querySelector("#form-error");
+
+const submitTaskButton = document.querySelector(
+    "#submit-task-button"
+);
+
 statusFilter.addEventListener("change", handleFilterChange);
 priorityFilter.addEventListener("change", handleFilterChange);
 sortSelect.addEventListener("change", handleFilterChange);
 searchInput.addEventListener("input", handleSearch);
 resetFiltersButton.addEventListener("click", resetFilters);
+addTaskButton.addEventListener("click", openTaskModal);
+closeModalButton.addEventListener("click", closeTaskModal);
+cancelTaskButton.addEventListener("click", closeTaskModal);
+
+taskModal.addEventListener("click", (event) => {
+    if (event.target.matches("[data-modal-close]")) {
+        closeTaskModal();
+    }
+});
+
+taskForm.addEventListener("submit", handleTaskSubmit);
+
+document.addEventListener("keydown", (event) => {
+    if (
+        event.key === "Escape" &&
+        !taskModal.hidden
+    ) {
+        closeTaskModal();
+    }
+});
 
 document.addEventListener("DOMContentLoaded", loadTasks);

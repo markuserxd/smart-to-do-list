@@ -97,7 +97,7 @@
                     Reset filters
                 </button>
             </div>
-            
+
         </section>
 
         <section
@@ -129,6 +129,129 @@
                 aria-live="polite"
             ></div>
         </section>
+
+        <div
+            id="task-modal"
+            class="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="task-modal-title"
+            hidden
+        >
+            <div class="modal-backdrop" data-modal-close></div>
+
+            <div class="modal-panel">
+                <div class="modal-header">
+                    <div>
+                        <p class="eyebrow">New task</p>
+                        <h2 id="task-modal-title">Add Task</h2>
+                    </div>
+
+                    <button
+                        id="close-modal-button"
+                        class="icon-button"
+                        type="button"
+                        aria-label="Close modal"
+                    >
+                        ✕
+                    </button>
+                </div>
+
+                <form id="task-form" novalidate>
+                    <div class="form-group">
+                        <label for="task-title">
+                            Title
+                            <span aria-hidden="true">*</span>
+                        </label>
+
+                        <input
+                            id="task-title"
+                            name="title"
+                            type="text"
+                            maxlength="100"
+                            autocomplete="off"
+                            required
+                        >
+
+                        <p
+                            id="title-error"
+                            class="field-error"
+                            role="alert"
+                        ></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="task-description">
+                            Description
+                        </label>
+
+                        <textarea
+                            id="task-description"
+                            name="description"
+                            rows="4"
+                            placeholder="Add more details about this task"
+                        ></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="task-priority">
+                                Priority
+                            </label>
+
+                            <select
+                                id="task-priority"
+                                name="priority"
+                            >
+                                <option value="Low">Low</option>
+                                <option value="Medium" selected>
+                                    Medium
+                                </option>
+                                <option value="High">High</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="task-deadline">
+                                Deadline
+                            </label>
+
+                            <input
+                                id="task-deadline"
+                                name="deadline"
+                                type="date"
+                            >
+                        </div>
+                    </div>
+
+                    <p
+                        id="form-error"
+                        class="form-error"
+                        role="alert"
+                        hidden
+                    ></p>
+
+                    <div class="modal-actions">
+                        <button
+                            id="cancel-task-button"
+                            class="secondary-button"
+                            type="button"
+                        >
+                            Cancel
+                        </button>
+
+                        <button
+                            id="submit-task-button"
+                            class="primary-button"
+                            type="submit"
+                        >
+                            Add Task
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
     </main>
 
     <script

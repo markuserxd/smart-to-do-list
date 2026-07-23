@@ -92,3 +92,26 @@ export async function deleteTask(taskId) {
 
     return body;
 }
+
+export async function updateTask(taskId, taskData) {
+    const response = await fetch(
+        `${API_BASE_URL}/tasks/${taskId}`,
+        {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(taskData)
+        }
+    );
+
+    const body = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            body.message || "Unable to update task"
+        );
+    }
+
+    return body.data;
+}

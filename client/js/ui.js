@@ -72,10 +72,17 @@ function createTaskCard(task) {
     actions.className = "task-actions";
 
     const editButton = document.createElement("button");
+
     editButton.className = "icon-button";
     editButton.type = "button";
     editButton.textContent = "Edit";
     editButton.dataset.action = "edit";
+    editButton.dataset.taskId = String(task.id);
+
+    editButton.setAttribute(
+        "aria-label",
+        `Edit ${task.title}`
+    );
 
     const deleteButton = document.createElement("button");
 

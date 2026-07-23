@@ -1,5 +1,15 @@
-import { createTask, deleteTask, fetchTasks, toggleTaskComplete } from "./api.js";
+import { createTask, deleteTask, fetchTasks, toggleTaskComplete, updateTask } from "./api.js";
 import { renderTasks, showError, showLoading, showToast } from "./ui.js";
+
+let editingTaskId = null;
+let currentTasks = [];
+
+let currentPagination = {
+    page: 1,
+    limit: 10,
+    totalItems: 0,
+    totalPages: 0
+};
 
 const searchInput = document.querySelector("#search-input");
 const statusFilter = document.querySelector("#status-filter");
@@ -47,11 +57,14 @@ async function loadTasks({ showLoadingState = true } = {}) {
 
     try {
         const result = await fetchTasks(buildQueryString());
+        currentTasks = result.tasks;
+        currentPagination = result.pagination;
 
         renderTasks(
             result.tasks,
             result.pagination.totalItems
         );
+
     } catch (error) {
         if (error.name === "AbortError") {
             return;
@@ -83,8 +96,13 @@ async function handleTaskSubmit(event) {
         return;
     }
 
+    const taskId = editingTaskId;
+    const isEditing = taskId !== null;
+
     submitTaskButton.disabled = true;
-    submitTaskButton.textContent = "Adding...";
+    submitTaskButton.textContent = isEditing
+        ? "Saving..."
+        : "Adding...";
 
     formError.hidden = true;
     formError.textContent = "";
@@ -92,12 +110,20 @@ async function handleTaskSubmit(event) {
     try {
         const taskData = getTaskFormData();
 
-        await createTask(taskData);
+        if (isEditing) {
+            await updateTask(taskId, taskData);
+            showToast("Task updated successfully");
+        } else {
+            await createTask(taskData);
+            taskQuery.page = 1;
+            showToast("Task created successfully");
+        }
 
         closeTaskModal();
 
-        taskQuery.page = 1;
-        await loadTasks();
+        await loadTasks({
+            showLoadingState: false
+        });
     } catch (error) {
         console.error(error);
 
@@ -109,7 +135,12 @@ async function handleTaskSubmit(event) {
                 : error.message;
     } finally {
         submitTaskButton.disabled = false;
-        submitTaskButton.textContent = "Add Task";
+
+        if (!taskModal.hidden) {
+            submitTaskButton.textContent = isEditing
+                ? "Save Changes"
+                : "Add Task";
+        }
     }
 }
 
@@ -170,6 +201,20 @@ async function handleDeleteConfirm() {
 
     try {
         await deleteTask(taskId);
+
+        const remainingItems =
+            currentPagination.totalItems - 1;
+
+        const remainingPages = Math.ceil(
+            remainingItems / taskQuery.limit
+        );
+
+        if (
+            taskQuery.page > 1 &&
+            taskQuery.page > remainingPages
+        ) {
+            taskQuery.page -= 1;
+        }
 
         closeDeleteModal();
 
@@ -232,6 +277,11 @@ function resetFilters() {
 function resetTaskForm() {
     taskForm.reset();
 
+    editingTaskId = null;
+
+    taskModalEyebrow.textContent = "New task";
+    taskModalTitle.textContent = "Add Task";
+
     taskPriorityInput.value = "Medium";
     titleError.textContent = "";
 
@@ -239,6 +289,11 @@ function resetTaskForm() {
     formError.textContent = "";
 
     taskTitleInput.removeAttribute("aria-invalid");
+
+    document.querySelector("#task-modal-title")
+        .textContent = "Add Task";
+
+    submitTaskButton.textContent = "Add Task";
 }
 
 function openTaskModal() {
@@ -328,6 +383,26 @@ function closeDeleteModal() {
 }
 
 function handleTaskListClick(event) {
+    const editButton = event.target.closest(
+        '[data-action="edit"]'
+    );
+
+    if (editButton) {
+        const taskId = Number(editButton.dataset.taskId);
+
+        const task = currentTasks.find(
+            (item) => item.id === taskId
+        );
+
+        if (!task) {
+            showToast("Task could not be found.", "error");
+            return;
+        }
+
+        openEditTaskModal(task);
+        return;
+    }
+
     const deleteButton = event.target.closest(
         '[data-action="delete"]'
     );
@@ -337,6 +412,7 @@ function handleTaskListClick(event) {
     }
 
     const taskId = Number(deleteButton.dataset.taskId);
+
     const taskTitle =
         deleteButton.dataset.taskTitle || "this task";
 
@@ -345,6 +421,29 @@ function handleTaskListClick(event) {
     }
 
     openDeleteModal(taskId, taskTitle);
+}
+
+function openEditTaskModal(task) {
+    resetTaskForm();
+
+    editingTaskId = task.id;
+
+    taskTitleInput.value = task.title;
+    taskDescriptionInput.value = task.description || "";
+    taskPriorityInput.value = task.priority;
+    taskDeadlineInput.value = task.deadline || "";
+    taskModalEyebrow.textContent = "Update task";
+    taskModalTitle.textContent = "Edit Task";
+
+    submitTaskButton.textContent = "Save Changes";
+
+    taskModal.hidden = false;
+    document.body.classList.add("modal-open");
+
+    requestAnimationFrame(() => {
+        taskTitleInput.focus();
+        taskTitleInput.select();
+    });
 }
 
 const handleSearch = debounce(() => {
@@ -408,6 +507,14 @@ const cancelDeleteButton = document.querySelector(
 
 const confirmDeleteButton = document.querySelector(
     "#confirm-delete-button"
+);
+
+const taskModalEyebrow = document.querySelector(
+    "#task-modal-eyebrow"
+);
+
+const taskModalTitle = document.querySelector(
+    "#task-modal-title"
 );
 
 statusFilter.addEventListener("change", handleFilterChange);

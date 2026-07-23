@@ -73,3 +73,22 @@ export async function toggleTaskComplete(taskId) {
 
     return body.data;
 }
+
+export async function deleteTask(taskId) {
+    const response = await fetch(
+        `${API_BASE_URL}/tasks/${taskId}`,
+        {
+            method: "DELETE"
+        }
+    );
+
+    const body = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            body.message || "Unable to delete task"
+        );
+    }
+
+    return body;
+}

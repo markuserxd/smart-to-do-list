@@ -1,4 +1,4 @@
-import { createTask, fetchTasks, toggleTaskComplete } from "./api.js";
+import { createTask, deleteTask, fetchTasks, toggleTaskComplete } from "./api.js";
 import { renderTasks, showError, showLoading, showToast } from "./ui.js";
 
 const searchInput = document.querySelector("#search-input");
@@ -158,6 +158,41 @@ async function handleTaskListChange(event) {
     }
 }
 
+async function handleDeleteConfirm() {
+    if (!selectedTaskForDelete) {
+        return;
+    }
+
+    const taskId = selectedTaskForDelete.id;
+
+    confirmDeleteButton.disabled = true;
+    confirmDeleteButton.textContent = "Deleting...";
+
+    try {
+        await deleteTask(taskId);
+
+        closeDeleteModal();
+
+        showToast("Task deleted successfully");
+
+        await loadTasks({
+            showLoadingState: false
+        });
+    } catch (error) {
+        console.error(error);
+
+        showToast(
+            error.message === "Failed to fetch"
+                ? "Unable to connect to the server."
+                : error.message,
+            "error"
+        );
+    } finally {
+        confirmDeleteButton.disabled = false;
+        confirmDeleteButton.textContent = "Delete Task";
+    }
+}
+
 function debounce(callback, delay = 400) {
     let timeoutId;
 
@@ -265,6 +300,53 @@ function getTaskFormData() {
     };
 }
 
+let selectedTaskForDelete = null;
+
+function openDeleteModal(taskId, taskTitle) {
+    selectedTaskForDelete = {
+        id: taskId,
+        title: taskTitle
+    };
+
+    deleteModalMessage.textContent =
+        `Are you sure you want to delete "${taskTitle}"? ` +
+        "This action cannot be undone.";
+
+    deleteModal.hidden = false;
+    document.body.classList.add("modal-open");
+
+    requestAnimationFrame(() => {
+        cancelDeleteButton.focus();
+    });
+}
+
+function closeDeleteModal() {
+    deleteModal.hidden = true;
+    document.body.classList.remove("modal-open");
+
+    selectedTaskForDelete = null;
+}
+
+function handleTaskListClick(event) {
+    const deleteButton = event.target.closest(
+        '[data-action="delete"]'
+    );
+
+    if (!deleteButton) {
+        return;
+    }
+
+    const taskId = Number(deleteButton.dataset.taskId);
+    const taskTitle =
+        deleteButton.dataset.taskTitle || "this task";
+
+    if (!Number.isInteger(taskId)) {
+        return;
+    }
+
+    openDeleteModal(taskId, taskTitle);
+}
+
 const handleSearch = debounce(() => {
     taskQuery.search = searchInput.value.trim();
     taskQuery.page = 1;
@@ -312,6 +394,22 @@ const submitTaskButton = document.querySelector(
 
 const taskList = document.querySelector("#task-list");
 
+const deleteModal = document.querySelector(
+    "#delete-modal"
+);
+
+const deleteModalMessage = document.querySelector(
+    "#delete-modal-message"
+);
+
+const cancelDeleteButton = document.querySelector(
+    "#cancel-delete-button"
+);
+
+const confirmDeleteButton = document.querySelector(
+    "#confirm-delete-button"
+);
+
 statusFilter.addEventListener("change", handleFilterChange);
 priorityFilter.addEventListener("change", handleFilterChange);
 sortSelect.addEventListener("change", handleFilterChange);
@@ -321,6 +419,19 @@ addTaskButton.addEventListener("click", openTaskModal);
 closeModalButton.addEventListener("click", closeTaskModal);
 cancelTaskButton.addEventListener("click", closeTaskModal);
 taskList.addEventListener("change", handleTaskListChange);
+taskList.addEventListener("click", handleTaskListClick);
+cancelDeleteButton.addEventListener("click", closeDeleteModal);
+confirmDeleteButton.addEventListener("click", handleDeleteConfirm);
+
+deleteModal.addEventListener("click", (event) => {
+    if (
+        event.target.matches(
+            "[data-delete-modal-close]"
+        )
+    ) {
+        closeDeleteModal();
+    }
+});
 
 taskModal.addEventListener("click", (event) => {
     if (event.target.matches("[data-modal-close]")) {
@@ -331,11 +442,17 @@ taskModal.addEventListener("click", (event) => {
 taskForm.addEventListener("submit", handleTaskSubmit);
 
 document.addEventListener("keydown", (event) => {
-    if (
-        event.key === "Escape" &&
-        !taskModal.hidden
-    ) {
+    if (event.key !== "Escape") {
+        return;
+    }
+
+    if (!taskModal.hidden) {
         closeTaskModal();
+        return;
+    }
+
+    if (!deleteModal.hidden) {
+        closeDeleteModal();
     }
 });
 

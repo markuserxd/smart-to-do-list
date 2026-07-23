@@ -253,6 +253,54 @@
         </div>
 
         <div
+            id="delete-modal"
+            class="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-modal-title"
+            hidden
+        >
+            <div
+                class="modal-backdrop"
+                data-delete-modal-close
+            ></div>
+
+            <div class="modal-panel confirmation-panel">
+                <div class="confirmation-icon" aria-hidden="true">
+                    !
+                </div>
+
+                <div class="confirmation-content">
+                    <h2 id="delete-modal-title">
+                        Delete Task?
+                    </h2>
+
+                    <p id="delete-modal-message">
+                        This action cannot be undone.
+                    </p>
+                </div>
+
+                <div class="modal-actions">
+                    <button
+                        id="cancel-delete-button"
+                        class="secondary-button"
+                        type="button"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        id="confirm-delete-button"
+                        class="danger-button"
+                        type="button"
+                    >
+                        Delete Task
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div
             id="toast"
             class="toast"
             role="status"

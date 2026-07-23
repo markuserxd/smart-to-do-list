@@ -509,3 +509,54 @@ select:focus {
 .toast[hidden] {
     display: none;
 }
+
+.delete-button {
+    color: var(--danger);
+}
+
+.delete-button:hover {
+    border-color: #fecaca;
+    background: #fef2f2;
+}
+
+.confirmation-panel {
+    width: min(440px, 100%);
+    text-align: center;
+}
+
+.confirmation-icon {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    background: #fef2f2;
+    color: var(--danger);
+    font-size: 1.5rem;
+    font-weight: 900;
+}
+
+.confirmation-content h2 {
+    margin-bottom: 10px;
+}
+
+.confirmation-content p {
+    margin-bottom: 24px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.danger-button {
+    min-height: 44px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--danger);
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.danger-button:hover {
+    background: #b91c1c;
+}

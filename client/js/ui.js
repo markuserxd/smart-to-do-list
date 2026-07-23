@@ -78,10 +78,18 @@ function createTaskCard(task) {
     editButton.dataset.action = "edit";
 
     const deleteButton = document.createElement("button");
-    deleteButton.className = "icon-button";
+
+    deleteButton.className = "icon-button delete-button";
     deleteButton.type = "button";
     deleteButton.textContent = "Delete";
     deleteButton.dataset.action = "delete";
+    deleteButton.dataset.taskId = String(task.id);
+    deleteButton.dataset.taskTitle = task.title;
+
+    deleteButton.setAttribute(
+        "aria-label",
+        `Delete ${task.title}`
+    );
 
     actions.append(editButton, deleteButton);
     article.append(checkbox, content, actions);

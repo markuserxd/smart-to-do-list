@@ -1,5 +1,5 @@
 import { createTask, deleteTask, fetchTasks, toggleTaskComplete, updateTask } from "./api.js";
-import { renderTasks, showError, showLoading, showToast } from "./ui.js";
+import { renderPagination, renderTasks, showError, showLoading, showToast } from "./ui.js";
 
 let editingTaskId = null;
 let currentTasks = [];
@@ -15,6 +15,8 @@ const searchInput = document.querySelector("#search-input");
 const statusFilter = document.querySelector("#status-filter");
 const priorityFilter = document.querySelector("#priority-filter");
 const sortSelect = document.querySelector("#sort-select");
+const pagination = document.querySelector("#pagination");
+const limitSelect = document.querySelector("#limit-select");
 
 const taskQuery = {
     search: "",
@@ -64,6 +66,8 @@ async function loadTasks({ showLoadingState = true } = {}) {
             result.tasks,
             result.pagination.totalItems
         );
+
+        renderPagination(result.pagination);
 
     } catch (error) {
         if (error.name === "AbortError") {
@@ -202,18 +206,18 @@ async function handleDeleteConfirm() {
     try {
         await deleteTask(taskId);
 
-        const remainingItems =
-            currentPagination.totalItems - 1;
-
-        const remainingPages = Math.ceil(
-            remainingItems / taskQuery.limit
+        const remainingItems = Math.max(
+            currentPagination.totalItems - 1,
+            0
         );
 
-        if (
-            taskQuery.page > 1 &&
-            taskQuery.page > remainingPages
-        ) {
-            taskQuery.page -= 1;
+        const remainingPages = Math.max(
+            Math.ceil(remainingItems / taskQuery.limit),
+            1
+        );
+
+        if (taskQuery.page > remainingPages) {
+            taskQuery.page = remainingPages;
         }
 
         closeDeleteModal();
@@ -264,12 +268,14 @@ function resetFilters() {
     statusFilter.value = "";
     priorityFilter.value = "";
     sortSelect.value = "newest";
+    limitSelect.value = "10";
 
     taskQuery.search = "";
     taskQuery.status = "";
     taskQuery.priority = "";
     taskQuery.sort = "newest";
     taskQuery.page = 1;
+    taskQuery.limit = 10;
 
     loadTasks();
 }
@@ -446,6 +452,36 @@ function openEditTaskModal(task) {
     });
 }
 
+function handlePaginationClick(event) {
+    const button = event.target.closest(
+        "[data-page]"
+    );
+
+    if (!button || button.disabled) {
+        return;
+    }
+
+    const page = Number(button.dataset.page);
+
+    if (
+        !Number.isInteger(page) ||
+        page < 1 ||
+        page > currentPagination.totalPages
+    ) {
+        return;
+    }
+
+    taskQuery.page = page;
+
+    loadTasks();
+
+    document.querySelector(".task-section")
+        .scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+}
+
 const handleSearch = debounce(() => {
     taskQuery.search = searchInput.value.trim();
     taskQuery.page = 1;
@@ -529,6 +565,7 @@ taskList.addEventListener("change", handleTaskListChange);
 taskList.addEventListener("click", handleTaskListClick);
 cancelDeleteButton.addEventListener("click", closeDeleteModal);
 confirmDeleteButton.addEventListener("click", handleDeleteConfirm);
+pagination.addEventListener("click", handlePaginationClick);
 
 deleteModal.addEventListener("click", (event) => {
     if (
@@ -547,6 +584,13 @@ taskModal.addEventListener("click", (event) => {
 });
 
 taskForm.addEventListener("submit", handleTaskSubmit);
+
+limitSelect.addEventListener("change", () => {
+    taskQuery.limit = Number(limitSelect.value);
+    taskQuery.page = 1;
+
+    loadTasks();
+});
 
 document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") {

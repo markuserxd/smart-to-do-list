@@ -86,6 +86,17 @@
                 </select>
             </div>
 
+            <div class="filter-group">
+                <label for="limit-select">Per page</label>
+
+                <select id="limit-select">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+
             <div class="filter-actions">
                 <span class="filter-label">Actions</span>
 
@@ -114,20 +125,47 @@
                     0 tasks
                 </p>
             </div>
+                
+                <div
+                    id="status-message"
+                    class="status-message"
+                    role="status"
+                >
+                    Loading tasks...
+                </div>
+                
+                <div
+                    id="task-list"
+                    class="task-list"
+                    aria-live="polite"
+                ></div>
+                    <nav
+                        id="pagination"
+                        class="pagination"
+                        aria-label="Task pagination"
+                        hidden
+                    >
+                        <button
+                            id="previous-page-button"
+                            class="pagination-button"
+                            type="button"
+                        >
+                            Previous
+                        </button>
 
-            <div
-                id="status-message"
-                class="status-message"
-                role="status"
-            >
-                Loading tasks...
-            </div>
+                        <div
+                            id="page-buttons"
+                            class="page-buttons"
+                        ></div>
 
-            <div
-                id="task-list"
-                class="task-list"
-                aria-live="polite"
-            ></div>
+                        <button
+                            id="next-page-button"
+                            class="pagination-button"
+                            type="button"
+                        >
+                            Next
+                        </button>
+                    </nav>
         </section>
 
         <div
@@ -143,11 +181,13 @@
             <div class="modal-panel">
                 <div class="modal-header">
                     <div>
-                        <p class="eyebrow">New task</p>
-                        <h2 id="task-modal-title">Add Task</h2>
                         <p id="task-modal-eyebrow" class="eyebrow">
                             New task
                         </p>
+
+                        <h2 id="task-modal-title">
+                            Add Task
+                        </h2>
                     </div>
 
                     <button

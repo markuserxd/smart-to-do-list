@@ -2,6 +2,10 @@ const taskList = document.querySelector("#task-list");
 const statusMessage = document.querySelector("#status-message");
 const taskCount = document.querySelector("#task-count");
 const toast = document.querySelector("#toast");
+const pagination = document.querySelector("#pagination");
+const previousPageButton = document.querySelector("#previous-page-button");
+const nextPageButton = document.querySelector("#next-page-button");
+const pageButtons = document.querySelector("#page-buttons");
 
 function formatDeadline(deadline) {
     if (!deadline) {
@@ -104,8 +108,80 @@ function createTaskCard(task) {
     return article;
 }
 
+function createPageButton(page, currentPage) {
+    const button = document.createElement("button");
+
+    button.className = "page-number-button";
+    button.type = "button";
+    button.textContent = String(page);
+    button.dataset.page = String(page);
+
+    if (page === currentPage) {
+        button.classList.add("active");
+        button.setAttribute("aria-current", "page");
+        button.disabled = true;
+    }
+
+    button.setAttribute(
+        "aria-label",
+        page === currentPage
+            ? `Current page, page ${page}`
+            : `Go to page ${page}`
+    );
+
+    return button;
+}
+
+function createEllipsis() {
+    const span = document.createElement("span");
+
+    span.className = "pagination-ellipsis";
+    span.textContent = "…";
+    span.setAttribute("aria-hidden", "true");
+
+    return span;
+}
+
+function getVisiblePages(currentPage, totalPages) {
+    if (totalPages <= 7) {
+        return Array.from(
+            { length: totalPages },
+            (_, index) => index + 1
+        );
+    }
+
+    const pages = [1];
+
+    const startPage = Math.max(2, currentPage - 1);
+    const endPage = Math.min(
+        totalPages - 1,
+        currentPage + 1
+    );
+
+    if (startPage > 2) {
+        pages.push("ellipsis-start");
+    }
+
+    for (
+        let page = startPage;
+        page <= endPage;
+        page += 1
+    ) {
+        pages.push(page);
+    }
+
+    if (endPage < totalPages - 1) {
+        pages.push("ellipsis-end");
+    }
+
+    pages.push(totalPages);
+
+    return pages;
+}
+
 export function showLoading() {
     taskList.replaceChildren();
+    pagination.hidden = true;
 
     statusMessage.hidden = false;
     statusMessage.className = "status-message";
@@ -114,6 +190,7 @@ export function showLoading() {
 
 export function showError(message) {
     taskList.replaceChildren();
+    pagination.hidden = true;
 
     statusMessage.hidden = false;
     statusMessage.className = "status-message error";
@@ -129,10 +206,13 @@ export function renderTasks(tasks, totalItems = tasks.length) {
         `${totalItems} ${totalItems === 1 ? "task" : "tasks"}`;
 
     if (tasks.length === 0) {
+        pagination.hidden = true;
+
         statusMessage.hidden = false;
         statusMessage.className = "status-message";
         statusMessage.textContent =
             "No tasks found. Create your first task.";
+
         return;
     }
 
@@ -163,4 +243,49 @@ export function showToast(
     toastTimeoutId = setTimeout(() => {
         toast.hidden = true;
     }, duration);
+}
+
+export function renderPagination(paginationData) {
+    const {
+        page,
+        totalPages
+    } = paginationData;
+
+    pageButtons.replaceChildren();
+
+    if (totalPages <= 1) {
+        pagination.hidden = true;
+        return;
+    }
+
+    pagination.hidden = false;
+
+    previousPageButton.disabled = page <= 1;
+    nextPageButton.disabled = page >= totalPages;
+
+    previousPageButton.dataset.page = String(page - 1);
+    nextPageButton.dataset.page = String(page + 1);
+
+    const visiblePages = getVisiblePages(
+        page,
+        totalPages
+    );
+
+    const fragment = document.createDocumentFragment();
+
+    visiblePages.forEach((item) => {
+        if (
+            item === "ellipsis-start" ||
+            item === "ellipsis-end"
+        ) {
+            fragment.append(createEllipsis());
+            return;
+        }
+
+        fragment.append(
+            createPageButton(item, page)
+        );
+    });
+
+    pageButtons.append(fragment);
 }

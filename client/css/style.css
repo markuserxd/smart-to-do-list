@@ -634,3 +634,60 @@ select:focus {
         justify-content: center;
     }
 }
+
+.deadline-overdue {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.deadline-today {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.deadline-upcoming {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.deadline-normal {
+    background: #f8fafc;
+    color: #475569;
+}
+
+.deadline-none {
+    background: #f8fafc;
+    color: #64748b;
+}
+
+.deadline-completed {
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+.deadline-date {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+}
+
+.task-card {
+    border-left: 4px solid transparent;
+}
+
+.task-card.task-overdue {
+    border-left-color: #dc2626;
+}
+
+.task-card.task-due-today {
+    border-left-color: #f97316;
+}
+
+.task-card.task-completed {
+    border-left-color: #16a34a;
+}
+
+.empty-description {
+    font-style: italic;
+    opacity: 0.75;
+}

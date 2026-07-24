@@ -25,12 +25,109 @@ function getPriorityClass(priority) {
     return `priority-${priority.toLowerCase()}`;
 }
 
+function getDeadlineStatus(task) {
+    if (task.completed) {
+        return {
+            label: "Completed",
+            className: "deadline-completed"
+        };
+    }
+
+    if (!task.deadline) {
+        return {
+            label: "No deadline",
+            className: "deadline-none"
+        };
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const deadline = new Date(`${task.deadline}T00:00:00`);
+
+    if (Number.isNaN(deadline.getTime())) {
+        return {
+            label: "Invalid deadline",
+            className: "deadline-overdue"
+        };
+    }
+
+    const differenceInMilliseconds =
+        deadline.getTime() - today.getTime();
+
+    const differenceInDays = Math.round(
+        differenceInMilliseconds / (1000 * 60 * 60 * 24)
+    );
+
+    if (differenceInDays < 0) {
+        return {
+            label: "Overdue",
+            className: "deadline-overdue"
+        };
+    }
+
+    if (differenceInDays === 0) {
+        return {
+            label: "Due today",
+            className: "deadline-today"
+        };
+    }
+
+    if (differenceInDays === 1) {
+        return {
+            label: "Due tomorrow",
+            className: "deadline-upcoming"
+        };
+    }
+
+    if (differenceInDays <= 7) {
+        return {
+            label: `Due in ${differenceInDays} days`,
+            className: "deadline-upcoming"
+        };
+    }
+
+    return {
+        label: formatDeadline(task.deadline),
+        className: "deadline-normal"
+    };
+}
+
+function getTaskDeadlineClass(task) {
+    if (task.completed) {
+        return "task-completed";
+    }
+
+    if (!task.deadline) {
+        return "";
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const deadline = new Date(`${task.deadline}T00:00:00`);
+
+    if (deadline < today) {
+        return "task-overdue";
+    }
+
+    if (deadline.getTime() === today.getTime()) {
+        return "task-due-today";
+    }
+
+    return "";
+}
+
 function createTaskCard(task) {
     const article = document.createElement("article");
 
-    article.className = task.completed
-        ? "task-card completed"
-        : "task-card";
+    article.className = [
+        "task-card",
+        task.completed ? "completed" : "",
+        getTaskDeadlineClass(task)
+    ]
+        .filter(Boolean)
+        .join(" "); 
 
     article.dataset.taskId = task.id;
 
@@ -42,7 +139,9 @@ function createTaskCard(task) {
     checkbox.dataset.taskId = String(task.id);
     checkbox.setAttribute(
         "aria-label",
-        `Mark ${task.title} as complete`
+        task.completed
+            ? `Mark ${task.title} as pending`
+            : `Mark ${task.title} as completed`
     );
 
     const content = document.createElement("div");
@@ -65,11 +164,40 @@ function createTaskCard(task) {
         `badge ${getPriorityClass(task.priority)}`;
     priority.textContent = task.priority;
 
-    const deadline = document.createElement("span");
-    deadline.className = "badge";
-    deadline.textContent = formatDeadline(task.deadline);
+    const deadlineStatus = getDeadlineStatus(task);
 
-    meta.append(priority, deadline);
+    const deadline = document.createElement("span");
+
+    deadline.className =
+        `badge ${deadlineStatus.className}`;
+
+    deadline.textContent = deadlineStatus.label;
+
+    if (task.deadline) {
+        deadline.title =
+            `Deadline: ${formatDeadline(task.deadline)}`;
+    }
+
+    const deadlineStatusBadge = document.createElement("span");
+
+    deadlineStatusBadge.className =
+        `badge ${deadlineStatus.className}`;
+
+    deadlineStatusBadge.textContent = deadlineStatus.label;
+
+    meta.append(priority, deadlineStatusBadge);
+
+    if (task.deadline) {
+        const deadlineDateBadge =
+            document.createElement("span");
+
+        deadlineDateBadge.className = "badge deadline-date";
+        deadlineDateBadge.textContent =
+            formatDeadline(task.deadline);
+
+        meta.append(deadlineDateBadge);
+    }
+
     content.append(title, description, meta);
 
     const actions = document.createElement("div");

@@ -11,6 +11,9 @@ let currentPagination = {
     totalPages: 0
 };
 
+let lastFocusedElement = null;
+
+
 const searchInput = document.querySelector("#search-input");
 const statusFilter = document.querySelector("#status-filter");
 const priorityFilter = document.querySelector("#priority-filter");
@@ -303,6 +306,8 @@ function resetTaskForm() {
 }
 
 function openTaskModal() {
+    lastFocusedElement = document.activeElement;
+
     resetTaskForm();
 
     taskModal.hidden = false;
@@ -318,7 +323,11 @@ function closeTaskModal() {
     document.body.classList.remove("modal-open");
 
     resetTaskForm();
-    addTaskButton.focus();
+
+    if (lastFocusedElement) {
+        lastFocusedElement.focus();
+        lastFocusedElement = null;
+    }
 }
 
 function validateTaskForm() {
@@ -364,6 +373,8 @@ function getTaskFormData() {
 let selectedTaskForDelete = null;
 
 function openDeleteModal(taskId, taskTitle) {
+    lastFocusedElement = document.activeElement;
+
     selectedTaskForDelete = {
         id: taskId,
         title: taskTitle
@@ -430,6 +441,8 @@ function handleTaskListClick(event) {
 }
 
 function openEditTaskModal(task) {
+    lastFocusedElement = document.activeElement;
+
     resetTaskForm();
 
     editingTaskId = task.id;
@@ -480,6 +493,46 @@ function handlePaginationClick(event) {
             behavior: "smooth",
             block: "start"
         });
+}
+
+function trapFocus(event, modal) {
+    if (event.key !== "Tab") {
+        return;
+    }
+
+    const focusableElements = modal.querySelectorAll(`
+        button:not([disabled]),
+        input:not([disabled]),
+        select:not([disabled]),
+        textarea:not([disabled]),
+        a[href],
+        [tabindex]:not([tabindex="-1"])
+    `);
+
+    if (focusableElements.length === 0) {
+        return;
+    }
+
+    const firstElement = focusableElements[0];
+    const lastElement =
+        focusableElements[focusableElements.length - 1];
+
+    if (
+        event.shiftKey &&
+        document.activeElement === firstElement
+    ) {
+        event.preventDefault();
+        lastElement.focus();
+        return;
+    }
+
+    if (
+        !event.shiftKey &&
+        document.activeElement === lastElement
+    ) {
+        event.preventDefault();
+        firstElement.focus();
+    }
 }
 
 const handleSearch = debounce(() => {
@@ -593,17 +646,23 @@ limitSelect.addEventListener("change", () => {
 });
 
 document.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape") {
-        return;
-    }
-
     if (!taskModal.hidden) {
-        closeTaskModal();
+        if (event.key === "Escape") {
+            closeTaskModal();
+            return;
+        }
+
+        trapFocus(event, taskModal);
         return;
     }
 
     if (!deleteModal.hidden) {
-        closeDeleteModal();
+        if (event.key === "Escape") {
+            closeDeleteModal();
+            return;
+        }
+
+        trapFocus(event, deleteModal);
     }
 });
 

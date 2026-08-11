@@ -194,7 +194,7 @@
                         id="close-modal-button"
                         class="icon-button"
                         type="button"
-                        aria-label="Close modal"
+                        aria-label="Close task dialog"
                     >
                         ✕
                     </button>
@@ -213,6 +213,7 @@
                             type="text"
                             maxlength="100"
                             autocomplete="off"
+                            aria-describedby="title-error"
                             required
                         >
 
@@ -301,6 +302,7 @@
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-modal-title"
+            aria-describedby="delete-modal-message"
             hidden
         >
             <div

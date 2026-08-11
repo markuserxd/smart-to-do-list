@@ -691,3 +691,12 @@ select:focus {
     font-style: italic;
     opacity: 0.75;
 }
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+    outline: 3px solid var(--primary);
+    outline-offset: 3px;
+}
